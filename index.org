@@ -3,4 +3,26 @@
 * Работа с ProxySpace
 ** LiveCoding & ProxySpace
 ** Ndef для прототипирования эффектов
+
+Класс Ndef очень удобно использовать для прототипирования синтезаторов и
+эффектов благодаря тому, что у этого класса есть методы для автоматической
+генерации GUI.
+
+Для начала определим простой источник сигнала:
+#+begin_src sclang
+Ndef(\source).play;
+
+Ndef(\source, {
+  SinOsc.ar(\freq.kr(220)) * Env.perc().kr(0, Impulse.kr(0.25)) * 0.5;
+});
+#+end_src
+
+Чтобы сгенерировать GUI воспользуемся метолом ~.gui~
+#+begin_src sclang
+Ndef(\source).gui;
+#+end_src
+
+#+CAPTION: Интерфейс, сгенерированный для Ndef
+[[./basic_ndef_gui.png]]
+
 * ddwMixer
