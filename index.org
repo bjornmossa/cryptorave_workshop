@@ -1,0 +1,6 @@
+#+TITLE: Изучаем SuperCollider.
+
+* Работа с ProxySpace
+** LiveCoding & ProxySpace
+** Ndef для прототипирования эффектов
+* ddwMixer
