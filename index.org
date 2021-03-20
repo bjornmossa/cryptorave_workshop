@@ -30,11 +30,11 @@ Ndef(\source).gui;
 
 #+begin_src sclang
 Ndef(\source, {
-  SinOsc.ar(\freq.kr(220)) * Env.perc().kr(0, Impulse.kr(\tempo.kr(1))) * 0.5;
+  SinOsc.ar(\freq.kr(220)) * Env.perc().kr(0, Impulse.kr(\pulse.kr(1))) * 0.5;
 });
 #+end_src
 
-Слайдер ~tempo~ появился в интерфейсе, только ведёт он себя не так, как нам
+Слайдер ~pulse~ появился в интерфейсе, только ведёт он себя не так, как нам
 нужно.
 Дело в том, по-умолчанию SC создает элементы управления только базовых
 параметров, таких, как ~freq~ или ~gain~. Для того, чтобы определить диапазон
@@ -42,16 +42,72 @@ Ndef(\source, {
 воспользоваться классом [[https://doc.sccode.org/Classes/Spec.html][Spec]].
 
 #+begin_src sclang
-Spec.add(\tempo, [0.1, 10, \lin, 0.5, 0.1]);
+Spec.add(\pulse, [0.1, 10, \lin, 0.5, 0.1]);
 
 Ndef(\source, {
-  SinOsc.ar(\freq.kr(220)) * Env.perc().kr(0, Impulse.kr(\tempo.kr(1))) * 0.5;
+  SinOsc.ar(\freq.kr(220)) * Env.perc().kr(0, Impulse.kr(\pulse.kr(1))) * 0.5;
 });
 #+end_src
 
 Теперь слайдер tempo работает в диапазоне от 0.1 до 10 и изменяется линейно.
 Чтобы поведение слайдера стало экспоненциальный, символ ~\lin~ нужно заменить
 на ~\exp~. Часто такое нужно для параметров, измеряемых в децибелах.
+
+Стоит заметить, что класс ~Spec~ не может динамически обновляться и если вы
+впервые обновили его, прийдется вызвать интерфейс Ndef'а ещё раз. После этого
+каждое изменения ~Spec~ сразу отразиться в интерфейсе.
+
+Таким образом мы можем быстро и удобно менять параметры любого Ndef'а, быстро
+проверяя свои идеи.
+
+Таким же образом мы можем работать и с эффектами. Для этого мы используем
+~Ndef(\source)~ как генератор сигнала.
+
+В качестве примера сделаем немного странный эффект задержки.
+
+Сперва определим, какие параметры эффекта мы будем использовать.
+
+#+begin_src sclang
+Spec.add(\delay_time, [0.1, 1, \lin, 0.1, 0.1]);
+Spec.add(\feedback, [0.01, 1, \lin, 0.01, 0.01]);
+Spec.add(\rotation, [0.1, 100, \lin, 0.1, 0.1]);
+#+end_src
+
+Это можно сделать в любое время, но я предпочитаю подумать об этом как можно
+раньше.
+
+Итак. Берём сигнал ~Ndef(\source)~ и суммируем с внутренней шиной нашего
+эффекта. Потом направляем получившийся сигнал в комб фильтр. Разворачиваем
+сигнал, посылаем снова во внутреннюю шину, возвращаем сигнал с задержкой и
+получаем классический пинг-понг дилей.
+
+#+begin_src sclang
+Ndef(\fx).start;
+Ndef(\fx).gui;
+
+Ndef(\fx, {
+  var source = Ndef.ar(\source);
+  var local = LocalIn.ar(2) + source;
+  var delay = CombC.ar(local, 1, \delay_time.kr(0.1));
+  LocalOut.ar(delay.reverse * \feedback.kr(0.01));
+
+  delay
+});
+#+end_src
+
+
+
+
+Ndef(\fx, {
+  var source = Ndef.ar(\source);
+  var local = LocalIn.ar(2) + source;
+  var delay = CombC.ar(local, 1, \delay_time.kr(0.1));
+  LocalOut.ar(delay.reverse * \feedback.kr(0.01));
+
+  Rotate2.ar(delay[0], delay[1], SinOsc.kr(\rotation.kr(0.1)));
+})
+
+Ndef(\fx).gui
 
 * ddwMixer
  
